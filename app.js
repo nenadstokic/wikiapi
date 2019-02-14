@@ -24,7 +24,10 @@ const articleSchema = {
 
 const Article = mongoose.model("Article", articleSchema);
 
-app.get("/articles", function(req, res){
+/////////////////////////////// Requests Targetting All Articles ////////////////////////////
+
+app.route("/articles")
+.get(function(req, res){
   Article.find(function(err, foundArticles){
     if(!err) {
       res.send(foundArticles);
@@ -32,12 +35,8 @@ app.get("/articles", function(req, res){
       res.send(err);
     }
   });
-});
-
-app.post("/articles", function(req, res){
-  // console.log(req.body.title);
-  // console.log(req.body.content);
-
+})
+.post(function(req, res){
   const newArticle = new Article({
     title: req.body.title,
     content: req.body.content
@@ -50,6 +49,67 @@ app.post("/articles", function(req, res){
       res.send(err);
     }
   });
+})
+.delete(function(req,res){
+  Article.deleteMany(function(err){
+    if(!err) {
+      res.send("All articles deleted");
+    } else {
+      res.send(err);
+    }
+  });
+});
+
+//////////////////////////////// Requests Targetting A Specific Article ////////////////////////////
+
+app.route("/articles/:articleTitle")
+.get(function(req, res){
+
+  Article.findOne({title: req.params.articleTitle}, function(err, foundArticle){
+    if(foundArticle) {
+      res.send(foundArticle);
+    } else {
+      res.send("No articles matching that title was found.");
+    }
+  });
+})
+.put(function(req, res){
+  Article.update(
+    {title: req.params.articleTitle},
+    {title: req.body.title, content: req.body.content},
+    {overwrite: true},
+    function(err){
+      if(!err){
+        res.send("Successfully updated article.");
+      }
+    }
+  );
+
+})
+.patch(function(req, res){
+  Article.update(
+    {title: req.params.articleTitle},
+    {$set: req.body},
+    function(err){
+      if(!err){
+        res.send("Successfully updated article.");
+      } else {
+        res.send(err);
+      }
+    }
+  );
+})
+.delete(function(req, res){
+  Article.deleteOne(
+    {title: req.params.articleTitle},
+    function(err){
+      if(!err){
+        res.send("Successfully deleted the article.");
+      } else {
+        res.send(err);
+      }
+    }
+  );
 });
 
 app.listen(3000, function(){
